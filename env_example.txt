@@ -1,0 +1,23 @@
+# Environment Variables Template
+# Copy this file to .env and fill in your actual values
+# NEVER commit .env to GitHub!
+
+# Streamlit App URL (after deployment)
+STREAMLIT_APP_URL=https://your-app-name.streamlit.app
+
+# Email Configuration
+# For Gmail: Use app password from Google Account Settings
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SENDER_EMAIL=your-email@gmail.com
+SENDER_PASSWORD=your-app-password-here
+
+# Optional: Custom stocks to track (comma-separated)
+# TRACKED_STOCKS=AAPL,MSFT,GOOGL,AMZN,TSLA
+
+# Optional: Email sending schedule (for local development)
+# EMAIL_SCHEDULE_TIME=16:30  # 4:30 PM
+
+# Optional: Model parameters
+# MODEL_ALPHA=1.0
+# TRAIN_TEST_SPLIT=0.8
