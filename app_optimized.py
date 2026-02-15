@@ -226,12 +226,12 @@ def make_prediction(df, model, scaler, feature_cols):
     # Check if last_date is today or in the future
     today = pd.Timestamp.now().normalize()
     
-    if last_date.normalize() >= today:
+    if last_date.normalize() >= today - pd.Timedelta(days=1):
         # If data is current (today or future), next trading day is tomorrow
         next_date = get_next_trading_day(today)
     else:
         # Data is old, next date is after the last date we have
-        next_date = get_next_trading_day(last_date)
+        next_date = get_next_trading_day(today)
     
     return {
         "predicted_price": next_day_prediction,
