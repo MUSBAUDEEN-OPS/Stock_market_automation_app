@@ -83,15 +83,13 @@ for category in POPULAR_STOCKS.values():
 # ==================================================================================
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def fetch_stock_data(ticker, start_date):
+def fetch_stock_data(TICKER, START_DATE):
     """Fetch stock data from Yahoo Finance - CACHED"""
     df_raw = yf.download(
-        ticker,
-        start=start_date,
-        period="1d",  # This forces latest available data
-        progress=False,
-        prepost=False,
-        repair=True
+        TICKER,
+        start=START_DATE,
+        end=datetime.now().strftime("%Y-%m-%d"),
+        progress=False
     )
     
     
