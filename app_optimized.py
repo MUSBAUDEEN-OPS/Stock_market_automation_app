@@ -86,10 +86,10 @@ for category in POPULAR_STOCKS.values():
 def fetch_stock_data(TICKER, START_DATE):
     """Fetch stock data from Yahoo Finance - CACHED"""
     df_raw = yf.download(
-        TICKER,
-        start=START_DATE,
-        end=datetime.now().strftime("%Y-%m-%d"),
-        progress=False
+        ticker,
+        start=start_date,
+        progress=False,
+        repair=True
     )
     
     
@@ -477,6 +477,7 @@ def main():
         with st.spinner(f"🔄 Fetching and analyzing {ticker} data..."):
             try:
                 # Fetch data (CACHED)
+                st.cache_data.clear()
                 df_raw = fetch_stock_data(ticker, start_date.strftime("%Y-%m-%d"))
                 
                 if len(df_raw) < 100:
