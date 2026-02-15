@@ -441,7 +441,7 @@ def main():
         
         # Date range
         st.subheader("📅 Date Range")
-        start_date = st.date_input(
+        START_DATE = st.date_input(
             "Start Date",
             value=datetime.now() - timedelta(days=365*2),
             max_value=datetime.now()
@@ -478,7 +478,7 @@ def main():
             try:
                 # Fetch data (CACHED)
                 st.cache_data.clear()
-                df_raw = fetch_stock_data(ticker, start_date.strftime("%Y-%m-%d"))
+                df_raw = fetch_stock_data(TICKER, START_DATE.strftime("%Y-%m-%d"))
                 
                 if len(df_raw) < 100:
                     st.error(f"❌ Insufficient data for {ticker}. Need at least 100 days.")
