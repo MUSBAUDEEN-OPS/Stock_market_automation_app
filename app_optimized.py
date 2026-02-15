@@ -88,7 +88,7 @@ def fetch_stock_data(ticker, start_date):
     df_raw = yf.download(
         ticker,
         start=start_date,
-        end=datetime.now().strftime("%Y-%m-%d"),
+        end=(datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
         progress=False
     )
     
