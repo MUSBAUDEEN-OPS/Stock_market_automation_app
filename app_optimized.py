@@ -245,7 +245,7 @@ def make_prediction(df, model, scaler, feature_cols):
 # ==================================================================================
 # VISUALIZATION FUNCTION
 # ==================================================================================
-def create_visualization(df, model, scaler, feature_cols, prediction_data, lookback=60):
+def create_visualization(df, model, scaler, feature_cols, prediction_data, lookback=120):
     """Create actual vs predicted visualization"""
     recent_df = df.tail(lookback + 1).copy()
     
