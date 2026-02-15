@@ -88,9 +88,10 @@ def fetch_stock_data(ticker, start_date):
     df_raw = yf.download(
         ticker,
         start=start_date,
-        end=(datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d"),
-        progress=False
+        progress=False,
+        repair=True
     )
+    
     
     if isinstance(df_raw.columns, pd.MultiIndex):
         df_raw.columns = df_raw.columns.get_level_values(0)
