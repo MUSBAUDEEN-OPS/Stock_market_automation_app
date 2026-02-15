@@ -246,50 +246,86 @@ def make_prediction(df, model, scaler, feature_cols):
 # VISUALIZATION FUNCTION
 # ==================================================================================
 def create_visualization(df, model, scaler, feature_cols, prediction_data, lookback_days):
-    """Create comprehensive visualization"""
-    recent_df = df.tail(lookback_days).copy()
+    """Create actual vs predicted visualization"""
+    recent_df = df.tail(lookback + 1).copy()
     
-    fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
+    # Generate predictions
+    X_recent = recent_df[feature_cols]
+    X_recent_scaled = scaler.transform(X_recent)
+    recent_pred = model.predict(X_recent_scaled)
     
-    # Price & Prediction
+    dates = recent_df.index.tolist()
+    actual = recent_df["Close"].tolist()
+    predicted = recent_pred.tolist()
+    
+    # Add next day
+    next_date = prediction_data["next_date"]
+    dates_extended = dates + [next_date]
+    actual_extended = actual + [None]
+    predicted_extended = predicted + [prediction_data["predicted_price"]]
+    
+    # Create figure
+    fig, axes = plt.subplots(2, 1, figsize=(16, 10))
+    
+    # Top Panel: Actual vs Predicted
     ax1 = axes[0]
-    ax1.plot(recent_df.index, recent_df["Close"], label="Actual Close", linewidth=2, color="#1f77b4")
-    ax1.plot(recent_df.index, recent_df["MA_20"], label="MA 20", linestyle="--", alpha=0.7, color="orange")
-    ax1.fill_between(recent_df.index, recent_df["BB_Upper"], recent_df["BB_Lower"], alpha=0.2, color="gray", label="Bollinger Bands")
+    ax1.plot(dates, actual, label='Actual Close Price', linewidth=2.5, 
+             color='#2E86AB', marker='o', markersize=4, alpha=0.8)
+    ax1.plot(dates, predicted, label='Predicted Close Price', linewidth=2.5,
+             color='#A23B72', linestyle='--', marker='s', markersize=4, alpha=0.8)
+    ax1.plot([dates[-1], next_date], [predicted[-1], prediction_data["predicted_price"]],
+             linewidth=3.5, color='#F18F01', marker='*', markersize=18,
+             label='Next Day Forecast', zorder=5)
     
-    # Add prediction point
-    pred_point_x = prediction_data["next_date"]
-    pred_point_y = prediction_data["predicted_price"]
-    ax1.scatter([pred_point_x], [pred_point_y], color="red", s=150, zorder=5, marker="*", label=f"Predicted: ${pred_point_y:.2f}")
+    ax1.annotate(f'${prediction_data["predicted_price"]:.2f}',
+                xy=(next_date, prediction_data["predicted_price"]),
+                xytext=(15, 15), textcoords='offset points',
+                fontsize=12, fontweight='bold', color='#F18F01',
+                bbox=dict(boxstyle='round,pad=0.6', facecolor='yellow',
+                         alpha=0.8, edgecolor='#F18F01', linewidth=2.5))
     
-    ax1.set_title(f"Price History & Next-Day Prediction (Last {lookback_days} Days)", fontsize=14, fontweight="bold")
-    ax1.set_ylabel("Price ($)", fontsize=11)
-    ax1.legend(loc="upper left", fontsize=9)
-    ax1.grid(alpha=0.3)
+    ax1.axvspan(dates[-1], next_date, alpha=0.15, color='orange', label='Forecast Period')
+    ax1.set_title('Actual vs Predicted Price with Next-Day Forecast',
+                 fontsize=16, fontweight='bold', pad=20)
+    ax1.set_xlabel('Date', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Price ($)', fontsize=12, fontweight='bold')
+    ax1.legend(loc='best', fontsize=11, framealpha=0.95)
+    ax1.grid(True, alpha=0.3, linestyle='--')
     
-    # Volume
+    # Bottom Panel: Error Analysis
     ax2 = axes[1]
-    colors = ["green" if recent_df["Close"].iloc[i] >= recent_df["Open"].iloc[i] else "red" 
-              for i in range(len(recent_df))]
-    ax2.bar(recent_df.index, recent_df["Volume"], color=colors, alpha=0.6)
-    ax2.set_title("Trading Volume", fontsize=14, fontweight="bold")
-    ax2.set_ylabel("Volume", fontsize=11)
-    ax2.grid(alpha=0.3)
+    errors = np.array(actual) - np.array(predicted)
+    colors = ['#EF476F' if e < 0 else '#06D6A0' for e in errors]
+    ax2.bar(dates, errors, color=colors, alpha=0.7, edgecolor='black', linewidth=0.5)
     
-    # RSI
-    ax3 = axes[2]
-    ax3.plot(recent_df.index, recent_df["RSI"], label="RSI", color="purple", linewidth=2)
-    ax3.axhline(70, color="red", linestyle="--", alpha=0.7, label="Overbought (70)")
-    ax3.axhline(30, color="green", linestyle="--", alpha=0.7, label="Oversold (30)")
-    ax3.fill_between(recent_df.index, 30, 70, alpha=0.1, color="blue")
-    ax3.set_title("Relative Strength Index (RSI)", fontsize=14, fontweight="bold")
-    ax3.set_ylabel("RSI", fontsize=11)
-    ax3.set_xlabel("Date", fontsize=11)
-    ax3.legend(loc="upper left", fontsize=9)
-    ax3.grid(alpha=0.3)
+    ax2.axhline(y=0, color='black', linestyle='-', linewidth=1.5)
+    mean_error = np.mean(errors)
+    ax2.axhline(y=mean_error, color='blue', linestyle='--', linewidth=2,
+               label=f'Mean Error: ${mean_error:.2f}')
+    
+    ax2.set_title('Prediction Error (Actual - Predicted)',
+                 fontsize=16, fontweight='bold', pad=20)
+    ax2.set_xlabel('Date', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Error ($)', fontsize=12, fontweight='bold')
+    ax2.legend(loc='best', fontsize=11, framealpha=0.95)
+    ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
+    
+    # Metrics
+    rmse = np.sqrt(np.mean(errors**2))
+    mae = np.mean(np.abs(errors))
+    mape = np.mean(np.abs(errors / np.array(actual))) * 100
+    
+    metrics_text = f'Performance Metrics:\nRMSE: ${rmse:.2f}\nMAE: ${mae:.2f}\nMAPE: {mape:.2f}%'
+    ax2.text(0.02, 0.98, metrics_text, transform=ax2.transAxes,
+            fontsize=10, verticalalignment='top',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='wheat',
+                     alpha=0.9, edgecolor='black', linewidth=1.5),
+            fontfamily='monospace')
     
     plt.tight_layout()
     return fig
+
+    
 
 # ==================================================================================
 # TRADING GUIDE GENERATOR
