@@ -86,8 +86,8 @@ for category in POPULAR_STOCKS.values():
 def fetch_stock_data(TICKER, START_DATE):
     """Fetch stock data from Yahoo Finance - CACHED"""
     df_raw = yf.download(
-        ticker,
-        start=start_date,
+        TICKER,
+        start=START_DATE,
         progress=False,
         repair=True
     )
